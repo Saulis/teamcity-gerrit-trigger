@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:noNamespaceSchemaLocation="urn:shemas-jetbrains-com:teamcity-plugin-v1-xml">
+    <info>
+        <name>gerrit-trigger</name>
+        <display-name>Gerrit trigger</display-name>
+        <version>snapshot-20141902094533</version>
+        <description>Triggers builds based on events from Gerrit</description>
+        <vendor>
+            <name>Saulis</name>
+            <url>http://www.github.com/Saulis/</url>
+        </vendor>
+    </info>
+    <deployment use-separate-classloader="false"/>
+</teamcity-plugin>
