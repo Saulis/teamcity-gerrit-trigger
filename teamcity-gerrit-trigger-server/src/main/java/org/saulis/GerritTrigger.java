@@ -45,8 +45,8 @@ public class GerritTrigger extends BuildTriggerService {
         return new PolledBuildTrigger() {
             @Override
             public void triggerBuild(@NotNull PolledTriggerContext polledTriggerContext) throws BuildTriggerException {
-                GerritClient client = new GerritClient(new JSch());
-                client.getNewPatchSets(polledTriggerContext);
+                GerritClient client = new GerritClient(new JSch(), polledTriggerContext);
+                client.getNewPatchSets();
 
         try {
 

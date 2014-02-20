@@ -1,18 +1,19 @@
 package org.saulis;
 
-/**
- * Created by Saulis on 19/02/14.
- */
+import java.util.Date;
+
 class GerritPatchSet {
     private final String project;
     private final String branch;
     private final String ref;
+    private final Date createdOn;
 
-    public GerritPatchSet(String project, String branch, String ref) {
+    public GerritPatchSet(String project, String branch, String ref, long createdOn) {
 
         this.project = project;
         this.branch = branch;
         this.ref = ref;
+        this.createdOn = new Date(createdOn);
     }
 
     public String getProject() {
@@ -25,5 +26,9 @@ class GerritPatchSet {
 
     public String getRef() {
         return ref;
+    }
+
+    public Date getCreatedOn() {
+        return createdOn;
     }
 }
