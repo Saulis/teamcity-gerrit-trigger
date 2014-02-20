@@ -124,7 +124,7 @@ public class GerritClientTests {
 
     @Test
     public void commandHasBranchParameter() {
-        setBranchParameter("BaR");
+        setBranchParameter("bar");
 
         getNewPatchSets();
 

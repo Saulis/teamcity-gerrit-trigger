@@ -117,7 +117,7 @@ public class GerritClient {
             String projectParameter = parameters.get(key);
 
             if(projectParameter != null) {
-                return projectParameter.trim().toLowerCase();
+                return projectParameter.trim();
             }
         }
 
