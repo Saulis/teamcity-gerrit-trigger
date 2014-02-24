@@ -4,7 +4,7 @@
     <info>
         <name>gerrit-trigger</name>
         <display-name>Gerrit trigger</display-name>
-        <version>snapshot-20141902142909</version>
+        <version>snapshot-20142402110159</version>
         <description>Triggers builds based on events from Gerrit</description>
         <vendor>
             <name>Saulis</name>

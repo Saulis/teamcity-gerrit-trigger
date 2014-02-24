@@ -39,16 +39,15 @@ public class GerritClientTests {
 
     void mockDepedencies() {
         jsch = mock(JSch.class);
-        triggerContext = mock(PolledTriggerContext.class);
     }
 
     @Before
     public void setup() throws JSchException, IOException {
         mockDepedencies();
 
-        client = new GerritClient(jsch, triggerContext);
+        client = new GerritClient(jsch);
 
-
+        triggerContext = mock(PolledTriggerContext.class);
         parameters = new HashMap<String, String>();
         session = mock(Session.class);
         channel = mock(ChannelExec.class);
@@ -90,7 +89,7 @@ public class GerritClientTests {
     }
 
     private List<GerritPatchSet> getNewPatchSets() {
-        return client.getNewPatchSets();
+        return client.getNewPatchSets(triggerContext);
     }
 
     @Test
@@ -164,12 +163,12 @@ public class GerritClientTests {
     }
 
     @Test
-    public void patchSetsWithCurrentTimestampAreFetched() {
+    public void patchSetsWithCurrentTimestampAreNotFetched() {
         storedValues.put("timestamp", "1390482249000");
 
         List<GerritPatchSet> patchSets = getNewPatchSets();
 
-        assertThat(patchSets.size(), is(1));
+        assertThat(patchSets.size(), is(0));
     }
 
     @Test
@@ -196,15 +195,15 @@ public class GerritClientTests {
 
         getNewPatchSets();
 
-        assertThat(storedValues.get("timestamp"), not("1390482249000"));
+        assertThat(storedValues.get("timestamp"), is("1390482249000"));
     }
 
     @Test
-    public void timestampIsAdded() {
+    public void currentTimeIsSetToTimestamp() {
         storedValues.remove("timestamp");
 
         getNewPatchSets();
 
-        assertThat(storedValues.keySet().contains("timestamp"), is(true));
+        assertThat(storedValues.get("timestamp"), IsNot.not("1390482249000"));
     }
 }
