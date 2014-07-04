@@ -9,6 +9,8 @@ import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+
 public class GerritTriggerService extends BuildTriggerService {
 
     @NotNull
@@ -41,7 +43,39 @@ public class GerritTriggerService extends BuildTriggerService {
     @NotNull
     @Override
     public String describeTrigger(@NotNull BuildTriggerDescriptor buildTriggerDescriptor) {
-        return "Listening to events!"; //TODO: fix description
+        Map<String,String> parameters = buildTriggerDescriptor.getParameters();
+        StringBuilder description = new StringBuilder();
+
+        description.append("Listening");
+
+        String project = getTrimmedParameter(parameters, Parameters.PROJECT);
+        if(project.length() > 0) {
+            description.append(" to ");
+            description.append(project);
+
+            String branch = getTrimmedParameter(parameters, Parameters.BRANCH);
+            if(branch.length() > 0) {
+                description.append("/" + branch);
+            }
+        }
+
+        description.append(" on " + parameters.get(Parameters.HOST));
+
+        return description.toString();
+    }
+
+    private String getTrimmedParameter(Map<String, String> parameters, String key) {
+
+        //No sure how TeamCity inputs empty string parameters in UI, so playing it safe for nulls.
+        if(parameters.containsKey(key)) {
+            String value = parameters.get(key);
+
+            if(value != null) {
+                return value.trim();
+            }
+        }
+
+        return "";
     }
 
     @Nullable
@@ -58,5 +92,10 @@ public class GerritTriggerService extends BuildTriggerService {
         }
 
         return triggerPolicy;
+    }
+
+    @Override
+    public boolean isMultipleTriggersPerBuildTypeAllowed() {
+        return true;
     }
 }

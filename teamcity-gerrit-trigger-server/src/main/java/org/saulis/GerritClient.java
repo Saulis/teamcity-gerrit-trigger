@@ -170,8 +170,6 @@ public class GerritClient {
     }
 
     private void updateTimestampIfNewer(PolledTriggerContext context, Date timestamp) {
-        Map<String, String> storedValues = getStoredValues(context);
-
         if(hasTimestamp(context)) {
             Date previousTimestamp = getTimestamp(context);
 
@@ -188,9 +186,17 @@ public class GerritClient {
     }
 
     private boolean hasTimestamp(PolledTriggerContext context) {
-        Map<String, String> storedValues = getStoredValues(context);
+        if(hasStoredValues(context)) {
+            Map<String, String> storedValues = getStoredValues(context);
 
-        return storedValues.containsKey(TIMESTAMP_KEY);
+            return storedValues.containsKey(TIMESTAMP_KEY);
+        }
+
+        return false;
+    }
+
+    private boolean hasStoredValues(PolledTriggerContext context) {
+        return getStoredValues(context) != null;
     }
 
     private Map<String, String> getStoredValues(PolledTriggerContext context) {

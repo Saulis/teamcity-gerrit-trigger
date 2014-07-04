@@ -200,7 +200,7 @@ public class GerritClientTests {
 
     @Test
     public void currentTimeIsSetToTimestamp() {
-        storedValues.remove("timestamp");
+        when(customDataStorage.getValues()).thenReturn(null);
 
         getNewPatchSets();
 
