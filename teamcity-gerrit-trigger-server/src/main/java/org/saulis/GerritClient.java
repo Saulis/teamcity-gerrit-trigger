@@ -47,8 +47,6 @@ public class GerritClient {
         }
 
         return new ArrayList<GerritPatchSet>();
-
-
     }
 
     private Session openSession(PolledTriggerContext context) throws JSchException {
