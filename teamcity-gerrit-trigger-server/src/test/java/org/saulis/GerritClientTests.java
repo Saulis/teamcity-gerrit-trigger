@@ -5,7 +5,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
-import jetbrains.buildServer.buildTriggers.PolledTriggerContext;
 import jetbrains.buildServer.serverSide.CustomDataStorage;
 import org.hamcrest.core.IsNot;
 import org.hamcrest.core.StringContains;
@@ -28,14 +27,10 @@ public class GerritClientTests {
 
     private GerritClient client;
     private JSch jsch;
-    private PolledTriggerContext triggerContext;
+    private GerritPolledTriggerContext context;
     private Session session;
     private ChannelExec channel;
-    private HashMap<String,String> parameters;
-    private BuildTriggerDescriptor triggerDescriptor;
     private int sshPort = 29418;
-    private CustomDataStorage customDataStorage;
-    private HashMap<String,String> storedValues;
 
     void mockDepedencies() {
         jsch = mock(JSch.class);
@@ -47,15 +42,9 @@ public class GerritClientTests {
 
         client = new GerritClient(jsch);
 
-        triggerContext = mock(PolledTriggerContext.class);
-        parameters = new HashMap<String, String>();
+        context = mock(GerritPolledTriggerContext.class);
         session = mock(Session.class);
         channel = mock(ChannelExec.class);
-        triggerDescriptor = mock(BuildTriggerDescriptor.class);
-
-        customDataStorage = mock(CustomDataStorage.class);
-        storedValues = new HashMap<String, String>();
-        when(customDataStorage.getValues()).thenReturn(storedValues);
 
         when(jsch.getSession(anyString(), anyString(), anyInt())).thenReturn(session);
         when(session.openChannel("exec")).thenReturn(channel);
@@ -63,13 +52,8 @@ public class GerritClientTests {
         when(channel.getErrStream()).thenReturn(new ByteArrayInputStream( "".getBytes() ));
         when(channel.getInputStream()).thenReturn(new ByteArrayInputStream("{\"project\":\"abraham\",\"branch\":\"bush\",\"id\":\"I56f19c5af7dc4ccfd2fa4c9098f06e77dbfa12fb\",\"number\":\"2448\",\"subject\":\"Add support for monkey facets (#43245)\",\"owner\":{\"name\":\"Don Johnson\",\"email\":\"vice@miami.gov.us\",\"username\":\"don\"},\"url\":\"https://dev.miami.com/review/2448\",\"commitMessage\":\"Add support for blah blah (#12645)\\n\\nSince this is quite the change, I\\u0027ve taken the opportunity to rewrite smaller\\nadjoining pieces to make more sense. Move methods from classes, and so on.\\nThese changes are, however, only on the code level, no other functionality will\\nbe introduced by this patch.\\n\\nChange-Id: I56f19c5af7dc4ccfd2fa4c9098f06e77dbfa12fb\\n\",\"createdOn\":1389255476,\"lastUpdated\":1392802081,\"sortKey\":\"002b3a9800000990\",\"open\":true,\"status\":\"NEW\",\"currentPatchSet\":{\"number\":\"7\",\"revision\":\"15b1316507acd69bc7398643ddfad68efd6ded67\",\"parents\":[\"5733fbda77f1dfdfdde57e596a79260d1e9eb549\"],\"ref\":\"refs/changes/48/2448/7\",\"uploader\":{\"name\":\"Don Johnson\",\"email\":\"vice@miami.gov.us\",\"username\":\"donson\"},\"createdOn\":1390482249,\"author\":{\"name\":\"Don Johnson\",\"email\":\"vice@miami.gov.us\",\"username\":\"donnnnss\"},\"isDraft\":false,\"approvals\":[{\"type\":\"Code-Review\",\"description\":\"Code-Review\",\"value\":\"-1\",\"grantedOn\":1392802081,\"by\":{\"name\":\"John Foobars\",\"email\":\"john@miami.gov.us\",\"username\":\"johnfoos\"}}],\"sizeInsertions\":490,\"sizeDeletions\":-109}}\n{\"type\":\"stats\",\"rowCount\":1,\"runTimeMilliseconds\":10}".getBytes()));
 
-
-        when(triggerContext.getTriggerDescriptor()).thenReturn(triggerDescriptor);
-        when(triggerContext.getCustomDataStorage()).thenReturn(customDataStorage);
-        when(triggerDescriptor.getParameters()).thenReturn(parameters);
-
         Calendar calendar = new GregorianCalendar(2013, 0, 1);
-        storedValues.put("timestamp", String.valueOf(calendar.getTime().getTime()));
+        setTimeStamp(String.valueOf(calendar.getTime().getTime()));
     }
 
     private void assertThatCommandContains(String expected) {
@@ -81,15 +65,17 @@ public class GerritClientTests {
     }
 
     private void setProjectParameter(String project) {
-        parameters.put(Parameters.PROJECT, project);
+        when(context.hasProjectParameter()).thenReturn(true);
+        when(context.getProjectParameter()).thenReturn(project);
     }
 
     private void setBranchParameter(String branch) {
-        parameters.put(Parameters.BRANCH, branch);
+        when(context.hasBranchParameter()).thenReturn(true);
+        when(context.getBranchParameter()).thenReturn(branch);
     }
 
     private List<GerritPatchSet> getNewPatchSets() {
-        return client.getNewPatchSets(triggerContext);
+        return client.getNewPatchSets(context);
     }
 
     @Test
@@ -114,11 +100,15 @@ public class GerritClientTests {
 
     @Test
     public void emptyParameterIsIgnored() {
-        setProjectParameter("    ");
+        setEmptyProjectParameter();
 
         getNewPatchSets();
 
         assertThatCommandDoesNotContain("project:");
+    }
+
+    private void setEmptyProjectParameter() {
+        when(context.hasProjectParameter()).thenReturn(false);
     }
 
     @Test
@@ -131,18 +121,22 @@ public class GerritClientTests {
     }
 
     @Test
-    public void nullParameterIsIgnored() {
-        setBranchParameter(null);
+    public void emptyBranchIsIgnored() {
+        setEmptyBranchParameter();
 
         getNewPatchSets();
 
         assertThatCommandDoesNotContain("branch:");
     }
 
+    private void setEmptyBranchParameter() {
+        when(context.hasBranchParameter()).thenReturn(false);
+    }
+
     @Test
     public void usernameAndHostParametersAreUsed() throws JSchException {
-        parameters.put(Parameters.USERNAME, "foobar");
-        parameters.put(Parameters.HOST, "host.com");
+        when(context.getUsername()).thenReturn("foobar");
+        when(context.getHost()).thenReturn("host.com");
 
         getNewPatchSets();
 
@@ -164,16 +158,21 @@ public class GerritClientTests {
 
     @Test
     public void patchSetsWithCurrentTimestampAreNotFetched() {
-        storedValues.put("timestamp", "1390482249000");
+        setTimeStamp("1390482249000");
 
         List<GerritPatchSet> patchSets = getNewPatchSets();
 
         assertThat(patchSets.size(), is(0));
     }
 
+    private void setTimeStamp(String value) {
+        when(context.hasTimestamp()).thenReturn(true);
+        when(context.getTimestamp()).thenReturn(new Date(Long.parseLong(value)));
+    }
+
     @Test
     public void patchSetsOlderThanTimestampAreSkipped() {
-        storedValues.put("timestamp", "1390482249001");
+        setTimeStamp("1390482249001");
 
         List<GerritPatchSet> patchSets = getNewPatchSets();
 
@@ -182,7 +181,7 @@ public class GerritClientTests {
 
     @Test
     public void patchSetsNewerThanTimestampAreFetched() {
-        storedValues.put("timestamp", "1390482248999");
+        setTimeStamp("1390482248999");
 
         List<GerritPatchSet> patchSets = getNewPatchSets();
 
@@ -191,19 +190,11 @@ public class GerritClientTests {
 
     @Test
     public void timestampIsUpdated() {
-        storedValues.put("timestamp", "1390482249000");
+        setTimeStamp("1390482249000");
 
         getNewPatchSets();
 
-        assertThat(storedValues.get("timestamp"), is("1390482249000"));
+        verify(context).updateTimestampIfNewer(context.getTimestamp());
     }
 
-    @Test
-    public void currentTimeIsSetToTimestamp() {
-        when(customDataStorage.getValues()).thenReturn(null);
-
-        getNewPatchSets();
-
-        assertThat(storedValues.get("timestamp"), IsNot.not("1390482249000"));
-    }
 }

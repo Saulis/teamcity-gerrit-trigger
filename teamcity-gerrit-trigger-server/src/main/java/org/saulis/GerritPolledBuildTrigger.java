@@ -25,7 +25,7 @@ class GerritPolledBuildTrigger extends PolledBuildTrigger {
     @Override
     public void triggerBuild(@NotNull PolledTriggerContext polledTriggerContext) throws BuildTriggerException {
         try {
-            List<GerritPatchSet> newPatchSets = gerritClient.getNewPatchSets(polledTriggerContext);
+            List<GerritPatchSet> newPatchSets = gerritClient.getNewPatchSets(new GerritPolledTriggerContext(polledTriggerContext));
 
             LOG.debug(String.format("GERRIT: Going to trigger %s new build(s).", newPatchSets.size()));
 

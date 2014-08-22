@@ -29,6 +29,23 @@
 </tr>
 
 <tr class="noBorder" >
+    <td><label for="<%=Parameters.KEYPATH%>">Custom Private Key path: </label></td>
+    <td>
+        <props:textProperty name="<%=Parameters.KEYPATH%>" style="width:10em;"/>
+        <span class="error" id="error_<%=Parameters.KEYPATH%>"></span>
+    </td>
+</tr>
+
+<tr class="noBorder" >
+    <td><label for="<%=Parameters.PASSPHRASE%>">Passphrase: </label></td>
+    <td>
+        <props:passwordProperty name="<%=Parameters.PASSPHRASE%>" style="width:10em;"/>
+        <span class="error" id="error_<%=Parameters.PASSPHRASE%>"></span>
+    </td>
+</tr>
+
+
+<tr class="noBorder" >
     <td><label for="<%=Parameters.PROJECT%>">Project: </label></td>
     <td>
         <props:textProperty name="<%=Parameters.PROJECT%>" style="width:10em;"/>

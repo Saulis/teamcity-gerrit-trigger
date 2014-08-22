@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 
 public class GerritPolledBuildTriggerTests {
 
-    private GerritPolledBuildTrigger trigger;
+    private GerritPolledBuildTrigger sut;
     private PolledTriggerContext context;
     private BuildCustomizerFactory buildCustomerFactory;
     private GerritClient client;
@@ -29,11 +29,11 @@ public class GerritPolledBuildTriggerTests {
         client = mock(GerritClient.class);
         buildCustomerFactory = mock(BuildCustomizerFactory.class);
 
-        trigger = new GerritPolledBuildTrigger(client, buildCustomerFactory);
+        sut = new GerritPolledBuildTrigger(client, buildCustomerFactory);
 
         context = mock(PolledTriggerContext.class);
         patchSets = new ArrayList<GerritPatchSet>();
-        when(client.getNewPatchSets(context)).thenReturn(patchSets);
+        when(client.getNewPatchSets(any(GerritPolledTriggerContext.class))).thenReturn(patchSets);
 
         buildCustomizer = mock(BuildCustomizer.class);
         when(buildCustomerFactory.createBuildCustomizer(any(SBuildType.class), any(SUser.class))).thenReturn(buildCustomizer);
@@ -43,7 +43,7 @@ public class GerritPolledBuildTriggerTests {
     }
 
     private void triggerBuild() {
-        trigger.triggerBuild(context);
+        sut.triggerBuild(context);
     }
 
     @Test
